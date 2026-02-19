@@ -1,0 +1,7 @@
+{
+  "uuid": "ddc-brightness@gpd-duo",
+  "name": "DDC Brightness (DP-3)",
+  "description": "Brightness slider for the DP-3 display via DDC/CI (ddcutil)",
+  "shell-version": ["48"],
+  "url": ""
+}
