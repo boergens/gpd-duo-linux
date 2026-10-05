@@ -1,0 +1,4 @@
+# Firmware tables are extracted per machine; never commit them.
+*.dat
+*.aml
+*.dsl

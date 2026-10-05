@@ -1,0 +1,34 @@
+#!/bin/sh
+# initramfs-tools hook: early-cpio ACPI override that makes the GPD Duo SP3105FT touchpad
+# IRQ level-triggered (stock DSDT forces it to Edge; a missed edge freezes the touchpad).
+# Build steps and notes: touchpad-freeze/README.md in github.com/boergens/gpd-duo-linux
+PREREQ=""
+prereqs() { echo "$PREREQ"; }
+case "$1" in
+prereqs) prereqs; exit 0 ;;
+esac
+
+. /usr/share/initramfs-tools/hook-functions
+
+AML=/etc/initramfs-tools/acpi-override/dsdt.aml
+STOCK_SHA=a348718391082ce9d7f81ca0fb0b6aa46d6f204c8b7c31aae8e4b85f35cb1052
+PATCHED_SHA=23036fb896c6e85d2c80ddb45ed151b69418e6158c01e45d84ea2fb33988738a
+
+# The kernel swaps in any DSDT whose OEM IDs match, so never ship this onto other firmware.
+dmi="$(cat /sys/class/dmi/id/board_name /sys/class/dmi/id/bios_version /sys/class/dmi/id/bios_date 2>/dev/null | tr '\n' ' ')"
+if [ "$dmi" != "G1622-01 2.17 03/26/2025 " ]; then
+	echo "W: gpd-duo-touchpad-acpi: firmware is '$dmi', not GPD Duo BIOS 2.17; skipping DSDT override" >&2
+	exit 0
+fi
+live="$(sha256sum /sys/firmware/acpi/tables/DSDT | cut -d' ' -f1)"
+if [ "$live" != "$STOCK_SHA" ] && [ "$live" != "$PATCHED_SHA" ]; then
+	echo "W: gpd-duo-touchpad-acpi: live DSDT is not the known stock/patched table; skipping DSDT override" >&2
+	exit 0
+fi
+
+tmp="$(mktemp -d)"
+mkdir -p "$tmp/kernel/firmware/acpi"
+cp "$AML" "$tmp/kernel/firmware/acpi/dsdt.aml"
+(cd "$tmp" && find kernel | cpio -H newc -o --quiet) >"$tmp.cpio"
+prepend_earlyinitramfs "$tmp.cpio"
+rm -rf "$tmp" "$tmp.cpio"

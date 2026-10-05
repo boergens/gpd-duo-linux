@@ -1,5 +1,7 @@
 # Touchpad Speed
 
+> If your touchpad stops responding entirely, see [Touchpad Freezes](touchpad-freeze/).
+
 The GPD Duo's touchpad (SP3105FT, 97x56mm) is quite small, and the default tracking speed in GNOME feels too fast for precise control.
 
 ## Fix
